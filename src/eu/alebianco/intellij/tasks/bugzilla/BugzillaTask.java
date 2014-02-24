@@ -4,7 +4,7 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.tasks.Comment;
 import com.intellij.tasks.Task;
 import com.intellij.tasks.TaskType;
-import de.lightningbug.api.domain.Bug;
+import com.j2bugzilla.base.Bug;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +33,7 @@ public class BugzillaTask extends Task {
     @NotNull
     @Override
     public String getId() {
-        return String.format("#%s", bug.getId().toString());
+        return Integer.toString(bug.getID());
     }
 
     @NotNull
@@ -45,7 +45,7 @@ public class BugzillaTask extends Task {
     @Nullable
     @Override
     public String getDescription() {
-        return bug.getDescription();
+        return ""; // TODO retrieve first comment?
     }
 
     @NotNull
@@ -69,7 +69,7 @@ public class BugzillaTask extends Task {
     @Nullable
     @Override
     public Date getUpdated() {
-        return null;
+        return bug.getLastChanged();
     }
 
     @Nullable
@@ -80,12 +80,12 @@ public class BugzillaTask extends Task {
 
     @Override
     public boolean isClosed() {
-        return false;
+        return "resolved".equals(bug.getStatus()) || "verified".equals(bug.getStatus());
     }
 
     @Override
     public boolean isIssue() {
-        return true;
+        return !"enhancment".equals(bug.getSeverity());
     }
 
     @Nullable

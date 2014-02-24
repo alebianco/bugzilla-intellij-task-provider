@@ -1,0 +1,33 @@
+<idea-plugin version="2">
+  <id>eu.alebianco.idea.bugzilla.tasks</id>
+  <name>Bugzilla Tasks Provider</name>
+  <version>0.0.1</version>
+  <vendor email="info@alessandrobianco.eu"
+          url="http://alessandrobianco.eu">
+      Alessandro Bianco
+  </vendor>
+
+  <description><![CDATA[
+      Allows for access of your bugzilla tasks.
+    ]]></description>
+
+  <change-notes><![CDATA[
+      17 feb 2014
+      - kick off
+    ]]>
+  </change-notes>
+
+  <idea-version since-build="131"/>
+
+  <depends>com.intellij.tasks</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+
+      <projectConfigurable instance="com.intellij.tasks.config.TaskConfigurable" id="tasks" displayName="Tasks" nonDefaultProject="true">
+          <configurable instance="com.intellij.tasks.config.TaskRepositoriesConfigurable" displayName="Servers" id="tasks.servers"/>
+      </projectConfigurable>
+
+      <tasks.repositoryType implementation="eu.alebianco.intellij.tasks.bugzilla.BugzillaRepositoryType"/>
+  </extensions>
+
+</idea-plugin>

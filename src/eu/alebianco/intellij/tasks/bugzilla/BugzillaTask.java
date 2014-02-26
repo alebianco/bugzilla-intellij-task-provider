@@ -5,6 +5,10 @@ import com.intellij.tasks.Comment;
 import com.intellij.tasks.Task;
 import com.intellij.tasks.TaskType;
 import com.j2bugzilla.base.Bug;
+import eu.alebianco.intellij.tasks.bugzilla.model.Severity;
+import eu.alebianco.intellij.tasks.bugzilla.model.Status;
+import icons.TasksIcons;
+import org.apache.xml.resolver.apps.resolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,13 +61,13 @@ public class BugzillaTask extends Task {
     @NotNull
     @Override
     public Icon getIcon() {
-        return IconLoader.getIcon("/bugzilla.png");
+        return isIssue() ? TasksIcons.Bug : TasksIcons.Feature;
     }
 
     @NotNull
     @Override
     public TaskType getType() {
-        return TaskType.BUG;
+        return isIssue() ? TaskType.BUG : TaskType.FEATURE;
     }
 
     @Nullable
@@ -80,12 +84,14 @@ public class BugzillaTask extends Task {
 
     @Override
     public boolean isClosed() {
-        return "resolved".equals(bug.getStatus()) || "verified".equals(bug.getStatus());
+        final Status status = Status.valueOf(bug.getStatus());
+        return status == Status.RESOLVED || status == Status.VERIFIED;
     }
 
     @Override
     public boolean isIssue() {
-        return !"enhancment".equals(bug.getSeverity());
+        final Severity severity = Severity.valueOf(bug.getSeverity());
+        return severity != Severity.ENHANCEMENT;
     }
 
     @Nullable

@@ -1,23 +1,20 @@
 package eu.alebianco.intellij.tasks.bugzilla;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.tasks.Task;
 import com.intellij.tasks.impl.BaseRepository;
-import de.lightningbug.api.BugzillaClient;
-import de.lightningbug.api.domain.Bug;
-import de.lightningbug.api.service.BugService;
-import de.lightningbug.api.service.ProductService;
+import com.j2bugzilla.base.Bug;
+import com.j2bugzilla.base.BugzillaConnector;
+import com.j2bugzilla.base.BugzillaException;
+import com.j2bugzilla.base.ConnectionException;
+import com.j2bugzilla.rpc.*;
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.generate.tostring.util.StringUtil;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Project: bugzilla-intellij-task-provider
@@ -32,9 +29,7 @@ import java.util.Map;
 public class BugzillaRepository extends BaseRepository {
     private static final Logger logger = Logger.getInstance(BugzillaRepository.class);
 
-    private BugzillaClient client;
-    private BugService bugs;
-    private ProductService products;
+    private BugzillaConnector connector = new BugzillaConnector();
 
     public BugzillaRepository(BugzillaRepositoryType type) {
         super(type);
@@ -42,78 +37,88 @@ public class BugzillaRepository extends BaseRepository {
 
     public BugzillaRepository(BugzillaRepository repository) {
         super(repository);
-        client = repository.client;
-        bugs = repository.bugs;
-        products = repository.products;
+        connector = repository.connector;
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof BugzillaRepository)) return false;
-        if (!super.equals(object)) return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
 
-        BugzillaRepository that = (BugzillaRepository) object;
+        BugzillaRepository that = (BugzillaRepository) o;
 
-        return  client == that.client &&
-                bugs == that.bugs &&
-                products == that.products;
-
+        return connector.equals(that.connector);
     }
 
     @Override
     public int hashCode() {
-        int result = client != null ? 1 : 0;
-        result = 31 * result + (bugs != null ? bugs.hashCode() : 0);
-        result = 31 * result + (products != null ? products.hashCode() : 0);
-        return result;
+        return connector.hashCode();
     }
 
     @Override
     public Task[] getIssues(@Nullable String query, int max, long since) throws Exception {
-        refreshProviders();
+        refreshConnection();
 
         final List<Task> tasks = new ArrayList<Task>();
 
-        final Map<String, Object[]> searchParams = buildSearchParams(query);
-        searchParams.put("status", new Object[]{ "UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "READY" });
-        if (since > 0) {
-            searchParams.put("creation_time", new Object[]{ since });
-        }
-        if (max > 0) {
-            searchParams.put("limit", new Object[]{ max });
-        }
+        BugSearch search = new BugSearch(buildSearchQueries(query));
+        connector.executeMethod(search);
 
-        for (Bug bug : bugs.search(searchParams)) {
-            tasks.add(new BugzillaTask(bug, getUrl()));
+        List<Bug> results = search.getSearchResults();
+        for (Bug bug : results) {
+            Callable<BugzillaComment[]> comments = buildLazyCommentsLoader(bug);
+            BugzillaTask task = new BugzillaTask(bug, comments, getUrl());
+            tasks.add(task);
+
         }
 
         return tasks.toArray(new Task[tasks.size()]);
     }
 
-    protected Map<String, Object[]> buildSearchParams(String query) {
-        Map<String, Object[]> result = null;
-
-        query = StringUtil.isEmpty(query) ? getDefaultQuery() : query;
-
-        try {
-            result = new ObjectMapper().readValue(query, new TypeReference<HashMap<String, Object[]>>(){});
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return result;
-    }
-
-    private String getDefaultQuery() {
-        return String.format("{\"assigned_to\":[\"%s\"]}", getUsername());
-    }
-
     @Nullable
     @Override
     public Task findTask(String id) throws Exception {
-        final String query = String.format("{\"id\":[\"%s\"]}", id);
-        return getIssues(query, 1, 0)[0];
+        refreshConnection();
+
+        GetBug operation = new GetBug(id);
+        connector.executeMethod(operation);
+        Bug result = operation.getBug();
+        Callable<BugzillaComment[]> comments = buildLazyCommentsLoader(result);
+
+        return new BugzillaTask(result, comments, getUrl());
+    }
+
+    private Callable<BugzillaComment[]> buildLazyCommentsLoader(@NotNull final Bug bug) {
+        return new Callable<BugzillaComment[]>() {
+            private BugzillaComment[] comments;
+
+            @Override
+            public BugzillaComment[] call() throws Exception {
+                if (comments == null) {
+                    final BugComments service = new BugComments(bug);
+                    connector.executeMethod(service);
+                    List<com.j2bugzilla.base.Comment> list = service.getComments();
+
+                    comments = new BugzillaComment[list.size()];
+                    for (int i = 0; i < list.size(); i++) {
+                        comments[i] = new BugzillaComment(list.get(i));
+                    }
+                }
+
+                return comments;
+            }
+        };
+    }
+
+    private List<BugSearch.SearchQuery> buildSearchQueries(@Nullable String query) {
+        List<BugSearch.SearchQuery> list = new ArrayList<BugSearch.SearchQuery>();
+
+        if (StringUtils.isBlank(query)) {
+            list.add(new BugSearch.SearchQuery(BugSearch.SearchLimiter.OWNER, getUsername()));
+        }
+
+        return list;
     }
 
     @Nullable
@@ -122,54 +127,24 @@ public class BugzillaRepository extends BaseRepository {
         return new CancellableConnection() {
             @Override
             protected void doTest() throws Exception {
-                refreshProviders();
-                if (client == null || !client.isLoggedIn()) {
-                    throw new IOException("Couldn't establish connection, sure this is the correct endpoint and login information?");
-                }
+                refreshConnection();
             }
 
             @Override
             public void cancel() {
-                if (client != null) {
-                    client.logout();
+                try {
+                    connector.executeMethod(new LogOut());
+                } catch (BugzillaException e) {
+                    // fail silently ...
                 }
             }
         };
     }
 
-    @Override
-    public void setUrl(String url) {
-        super.setUrl(url);
-        if (client != null) {
-            client.logout();
-            client = null;
-        }
-    }
-
-    @Override
-    public void setPassword(String password) {
-        super.setPassword(password);
-    }
-
-    private void refreshProviders() throws Exception {
-        if (client == null) {
-            client = new BugzillaClient(new URL(getUrl() + "/"), getUsername(), getPassword());
-        }
-
-        if (!client.isLoggedIn()) {
-            client.setUserName(getUsername());
-            client.setPassword(getPassword());
-            client.login();
-        }
-
-        if (client.isLoggedIn()) {
-            if (bugs == null) {
-                bugs = new BugService(client);
-            }
-            if (products == null) {
-                products = new ProductService(client);
-            }
-        }
+    private void refreshConnection() throws ConnectionException, BugzillaException {
+        connector.connectTo(getUrl());
+        LogIn login = new LogIn(getUsername(), getPassword());
+        connector.executeMethod(login);
     }
 
     @Override

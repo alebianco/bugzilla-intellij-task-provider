@@ -3,14 +3,13 @@ bugzilla-intellij-task-provider
 
 A task provider for Bugzilla4 that actually works.
 
-# Steps to configure a plugin SDK:
+# How to configure the project
 
 * Open Module Settings
 * SDKs -> + button -> IntelliJ Platform Plugin SDK -> Choose a folder with IntelliJ Ultimate(!) or *.App on Mac
 * Create a new Global library -> add all jars under the $IDEA_HOME/plugins/tasks folder
 
-# How to build a plugin zip file
+# How to build a plugin
 
-* Create a new artifact, set it to be build on every Make action.
-* Add the content of the META-INF folder and compile output.
-* Get the compiled zip from the $PROJECT_ROOT$/out/artifacts/ folder
+* From the `Build` menu, choose `Make Project`
+* From the `Build` menu, choose `Prepare Plugin Model <name> for Deployment`

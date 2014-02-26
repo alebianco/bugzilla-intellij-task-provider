@@ -1,19 +1,19 @@
 package eu.alebianco.intellij.tasks.bugzilla;
 
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.tasks.Comment;
 import com.intellij.tasks.Task;
 import com.intellij.tasks.TaskType;
 import com.j2bugzilla.base.Bug;
+import com.j2bugzilla.rpc.BugComments;
 import eu.alebianco.intellij.tasks.bugzilla.model.Severity;
 import eu.alebianco.intellij.tasks.bugzilla.model.Status;
 import icons.TasksIcons;
-import org.apache.xml.resolver.apps.resolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Project: bugzilla-intellij-task-provider
@@ -26,8 +26,10 @@ import java.util.Date;
  * Copyright © 2013 Alessandro Bianco
  */
 public class BugzillaTask extends Task {
+
     private final Bug bug;
-    public String baseUrl;
+    private String baseUrl;
+    private BugzillaComment[] comments;
 
     public BugzillaTask(Bug bug, String serverUrl) {
         this.bug = bug;
@@ -49,13 +51,23 @@ public class BugzillaTask extends Task {
     @Nullable
     @Override
     public String getDescription() {
-        return ""; // TODO retrieve first comment?
+        Comment comment = getComments()[0];
+        return (comment != null) ? comment.getText() : "";
     }
 
     @NotNull
     @Override
     public Comment[] getComments() {
-        return Comment.EMPTY_ARRAY;
+        if (comments == null) {
+            final BugComments service = new BugComments(bug);
+            List<com.j2bugzilla.base.Comment> list = service.getComments();
+            comments = new BugzillaComment[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                comments[i] = new BugzillaComment(list.get(i));
+            }
+        }
+
+        return comments;
     }
 
     @NotNull
@@ -99,5 +111,4 @@ public class BugzillaTask extends Task {
     public String getIssueUrl() {
         return String.format("%s/show_bug.cgi?id=%s", baseUrl, getId());
     }
-
 }

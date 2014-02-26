@@ -19,5 +19,6 @@ public enum Status implements Serializable {
     REOPENED,
     READY,
     RESOLVED,
-    VERIFIED;
+    VERIFIED,
+    CLOSED;
 }

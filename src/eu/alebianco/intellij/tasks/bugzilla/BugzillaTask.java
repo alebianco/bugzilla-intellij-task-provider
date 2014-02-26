@@ -4,7 +4,6 @@ import com.intellij.tasks.Comment;
 import com.intellij.tasks.Task;
 import com.intellij.tasks.TaskType;
 import com.j2bugzilla.base.Bug;
-import com.j2bugzilla.rpc.BugComments;
 import eu.alebianco.intellij.tasks.bugzilla.model.Severity;
 import eu.alebianco.intellij.tasks.bugzilla.model.Status;
 import icons.TasksIcons;
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.util.Date;
-import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Project: bugzilla-intellij-task-provider
@@ -28,11 +27,13 @@ import java.util.List;
 public class BugzillaTask extends Task {
 
     private final Bug bug;
-    private String baseUrl;
-    private BugzillaComment[] comments;
+    private final Callable<BugzillaComment[]> comments;
 
-    public BugzillaTask(Bug bug, String serverUrl) {
+    private String baseUrl;
+
+    public BugzillaTask(Bug bug, Callable<BugzillaComment[]> comments, String serverUrl) {
         this.bug = bug;
+        this.comments = comments;
         this.baseUrl = serverUrl;
     }
 
@@ -58,16 +59,12 @@ public class BugzillaTask extends Task {
     @NotNull
     @Override
     public Comment[] getComments() {
-        if (comments == null) {
-            final BugComments service = new BugComments(bug);
-            List<com.j2bugzilla.base.Comment> list = service.getComments();
-            comments = new BugzillaComment[list.size()];
-            for (int i = 0; i < list.size(); i++) {
-                comments[i] = new BugzillaComment(list.get(i));
-            }
+        try {
+            return comments.call();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        return comments;
+        return Comment.EMPTY_ARRAY;
     }
 
     @NotNull
@@ -97,12 +94,12 @@ public class BugzillaTask extends Task {
     @Override
     public boolean isClosed() {
         final Status status = Status.valueOf(bug.getStatus());
-        return status == Status.RESOLVED || status == Status.VERIFIED;
+        return status == Status.RESOLVED || status == Status.VERIFIED || status == Status.CLOSED;
     }
 
     @Override
     public boolean isIssue() {
-        final Severity severity = Severity.valueOf(bug.getSeverity());
+        final Severity severity = Severity.valueOf(bug.getSeverity().toUpperCase());
         return severity != Severity.ENHANCEMENT;
     }
 

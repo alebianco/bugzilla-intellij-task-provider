@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Bugzilla Tasks Provider by alebianco</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Bugzilla Tasks Provider</h1>
+        <h2>A plugin for viewing bugs from Bugzilla within IntelliJ/Jetbrains familiy of IDEs.</h2>
+        <a href="https://github.com/alebianco/bugzilla-intellij-task-provider" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="bugzilla-tasks-provider" class="anchor" href="#bugzilla-tasks-provider"><span class="octicon octicon-link"></span></a>Bugzilla Tasks Provider</h1>
+
+<p>A plugin for viewing bugs from Bugzilla within IntelliJ/Jetbrains familiy of IDEs.</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="install-the-plugin" class="anchor" href="#install-the-plugin"><span class="octicon octicon-link"></span></a>Install the plugin</h3>
+
+<ul>
+<li>Download the most recent release from the <a href="https://github.com/alebianco/bugzilla-intellij-task-provider/releases">Releases</a> page.</li>
+<li>Open the Settings menu in IntelliJ and go to the <code>Plugins</code> section.</li>
+<li>Click on "Install plugin from disk..." and select the zip file you downloaded.</li>
+<li>Restart IntelliJ when prompted.</li>
+</ul><h3>
+<a name="setup-the-plugin" class="anchor" href="#setup-the-plugin"><span class="octicon octicon-link"></span></a>Setup the plugin</h3>
+
+<ul>
+<li>Open the Settings menu in Intellij and go to the <code>Tasks &gt; Servers</code> section.</li>
+<li>Add a new server and select <strong>Bugzilla</strong> from the list.</li>
+<li>Fill the information about the server url and your account data.</li>
+<li>Click on "Test" to verify if the plugin can connect to your Bugzilla installation.</li>
+</ul><p><strong>NOTE</strong> If you need to connect to your Bugzilla installation over SSL, and you receive the message "<em>peer not authenticated</em>" when you test the server, you might need to add the server's certificate to your Java trust store.
+Follow <a href="https://confluence.atlassian.com/display/JIRA/Connecting+to+SSL+services">these instructions</a> to resolve the problem.</p>
+
+<h2>
+<a name="building" class="anchor" href="#building"><span class="octicon octicon-link"></span></a>Building</h2>
+
+<h3>
+<a name="how-to-configure-the-project" class="anchor" href="#how-to-configure-the-project"><span class="octicon octicon-link"></span></a>How to configure the project</h3>
+
+<ul>
+<li>Open the project settings from <code>File &gt; Project structure</code> and go to the <code>SDKs</code> section.</li>
+<li>Add a new <code>IntelliJ Platform Plugin SDK</code> and navigate to the folder where IntelliJ Ultimate is installed (<strong>$IDEA_HOME</strong> from now on), or the *.app on Mac OSX).</li>
+<li>Move to the <code>Global libraries</code> section.</li>
+<li>Add a new <em>Java</em> library add select all jars under the <code>$IDEA_HOME/plugins/tasks</code> folder.</li>
+<li>Add both the SDK and the library to the project's module.</li>
+<li>From the module's 'Dependencies' tab add a new <code>Jars or directories...</code> and select the <code>libs</code> folder of the project.</li>
+</ul><p><strong>NOTE</strong> The plugin and all the libraries it depends on have to build with JDK 1.6 in order to work with IntelliJ 13.</p>
+
+<h3>
+<a name="how-to-build-a-plugin" class="anchor" href="#how-to-build-a-plugin"><span class="octicon octicon-link"></span></a>How to build a plugin</h3>
+
+<ul>
+<li>From the <code>Build</code> menu, choose <code>Make Project</code>.</li>
+<li>From the <code>Build</code> menu, choose <code>Prepare Plugin Model &lt;name&gt; for Deployment</code>.</li>
+</ul><h2>
+<a name="contributing" class="anchor" href="#contributing"><span class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>If you want to contribute to the project refer to the <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> document for guidelines.</p>
+
+<h2>
+<a name="roadmap" class="anchor" href="#roadmap"><span class="octicon octicon-link"></span></a>Roadmap</h2>
+
+<p>You can follow the project planning on <a href="https://trello.com/b/z3vBqq9F">Trello</a>, you can even vote for the tasks that are more important for you and you'll like to see implemented.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/alebianco/bugzilla-intellij-task-provider/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/alebianco/bugzilla-intellij-task-provider/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/alebianco/bugzilla-intellij-task-provider"></a> is maintained by <a href="https://github.com/alebianco">alebianco</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-48485308-3");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>

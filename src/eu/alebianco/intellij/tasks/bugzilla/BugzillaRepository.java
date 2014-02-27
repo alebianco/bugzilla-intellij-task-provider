@@ -8,6 +8,7 @@ import com.j2bugzilla.base.BugzillaConnector;
 import com.j2bugzilla.base.BugzillaException;
 import com.j2bugzilla.base.ConnectionException;
 import com.j2bugzilla.rpc.*;
+import eu.alebianco.intellij.tasks.bugzilla.model.Status;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import static java.util.Arrays.asList;
 
 /**
  * Project: bugzilla-intellij-task-provider
@@ -62,7 +65,7 @@ public class BugzillaRepository extends BaseRepository {
 
         final List<Task> tasks = new ArrayList<Task>();
 
-        BugSearch search = new BugSearch(buildSearchQueries(query));
+        BugSearch search = new BugSearch(buildSearchQueries(query, max, since));
         connector.executeMethod(search);
 
         List<Bug> results = search.getSearchResults();
@@ -111,11 +114,19 @@ public class BugzillaRepository extends BaseRepository {
         };
     }
 
-    private List<BugSearch.SearchQuery> buildSearchQueries(@Nullable String query) {
+    private List<BugSearch.SearchQuery> buildSearchQueries(@Nullable String query, int max, long since) {
         List<BugSearch.SearchQuery> list = new ArrayList<BugSearch.SearchQuery>();
 
         if (StringUtils.isBlank(query)) {
-            list.add(new BugSearch.SearchQuery(BugSearch.SearchLimiter.OWNER, getUsername()));
+            list.add(new BugSearch.SearchQuery(BugSearch.SearchLimiter.OWNER, asList(getUsername())));
+        }
+
+        if (max > 0) {
+            list.add(new BugSearch.SearchQuery(BugSearch.SearchLimiter.LIMIT, String.valueOf(max)));
+        }
+
+        if (since > 0) {
+            list.add(new BugSearch.SearchQuery(BugSearch.SearchLimiter.LAST_CHANGE_TIME, String.valueOf(since)));
         }
 
         return list;

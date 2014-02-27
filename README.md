@@ -1,4 +1,4 @@
-bugzilla-intellij-task-provider
+Bugzilla Tasks Provider
 ===============================
 
 A plugin for viewing bugs from Bugzilla within IntelliJ/Jetbrains familiy of IDEs.
